@@ -1,0 +1,27 @@
+# macOS
+.DS_Store
+
+# Maven
+target/
+bin/
+
+# Eclipse IDE
+.settings/
+.project
+.classpath
+
+# Eclipse CDT
+.cproject
+.clang-format
+org.eclipse.cdt.codan.core.prefs
+Release/
+Debug/
+
+!src/main/visual_cpp/libNativeInspectorOSX/.project
+!src/main/visual_cpp/libNativeInspectorOSX/.cproject
+!src/main/visual_cpp/libNativeInspectorOSX/.settings
+
+# Shared libraries copied into the resources folder
+*.dylib
+*.dll
+*.so
