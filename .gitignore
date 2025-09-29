@@ -21,7 +21,16 @@ Debug/
 !src/main/visual_cpp/libNativeInspectorOSX/.cproject
 !src/main/visual_cpp/libNativeInspectorOSX/.settings
 
+# Visual Studio
+*.vs/
+ipch/
+*.VC.db
+*.VC.opendb
+
 # Shared libraries copied into the resources folder
 *.dylib
 *.dll
 *.so
+
+!src/test/resources/x86/*.dll
+!src/test/resources/x64/*.dll

@@ -56,7 +56,8 @@ JNIEXPORT jobjectArray JNICALL Java_com_hahnentt_rd_jni_NativeInspector_listExpo
   const char *path = env->GetStringUTFChars(nativeFilePath, nullptr);
   ifstream file(path, ios::binary);
   if (!file.is_open()) {
-    throwUnsupportedOperationException(env, "Cannot open native file!");
+    env->ReleaseStringUTFChars(nativeFilePath, path);
+    throwUnsupportedOperationException(env, "Cannot open native file.");
     return nullptr;
   }
 
@@ -84,7 +85,7 @@ JNIEXPORT jobjectArray JNICALL Java_com_hahnentt_rd_jni_NativeInspector_listExpo
     }
 
     if (!found) {
-      throwUnsupportedOperationException(env, "Unsupported architecture, only 64-Bit x86_64 / ARM supported!");
+      throwUnsupportedOperationException(env, "Unsupported architecture: 32-Bit x86/ARM is not supported.");
       return nullptr;
     }
 
@@ -97,7 +98,7 @@ JNIEXPORT jobjectArray JNICALL Java_com_hahnentt_rd_jni_NativeInspector_listExpo
     parseMachOExports64(base, exports);
     return convertVectorToJavaArray(env, exports);
   } else {
-    throwUnsupportedOperationException(env, "Unsupported architecture: 32-Bit Mach-O is not supported!");
+    throwUnsupportedOperationException(env, "Unsupported architecture: 32-Bit Mach-O is not supported.");
     return nullptr;
   }
 }
