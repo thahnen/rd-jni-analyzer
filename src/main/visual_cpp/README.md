@@ -14,3 +14,11 @@ To re-generate the C header file, invoke the following commands from the main pr
 The shared libary for macOS is created using the *Eclipse CDT* and a *C++ Managed Build* project
 that can be build from the command line via the *org.eclipse.cdt.managedbuilder.core.headlessbuild*
 Eclipse application or from within the IDE itself.
+
+## Windows: Visual Studio 2015 Visual C++
+
+The shared library for Windows is created using *Visual Studio 2015* and a *Visual C++* project that
+can be build from the *Developer Console for VS2015* using the *msbuild* tool or from within the IDE
+itself:
+
+> msbuild.exe /p:configuration=Release /p:platform=x64

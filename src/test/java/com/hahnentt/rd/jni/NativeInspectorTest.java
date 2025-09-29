@@ -1,6 +1,7 @@
 package com.hahnentt.rd.jni;
 
 import java.io.File;
+import java.util.Arrays;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Assumptions;
@@ -36,6 +37,8 @@ class NativeInspectorTest {
 	  var visusClientDllx86 = new File("src/test/resources/x86/VisusClient.dll");
 	  var exportedJniMethods = NativeInspector.listExportedJniMethods(visusClientDllx86.getAbsolutePath());
 	  Assertions.assertTrue(exportedJniMethods.length > 0);
+	  Assertions.assertTrue(
+			  Arrays.stream(exportedJniMethods).anyMatch("Java_com_visustt_tools_system_SystemProperties_isWin64"::equals));
   }
   
   @Test
@@ -45,5 +48,7 @@ class NativeInspectorTest {
 	  var visusClientDllx64 = new File("src/test/resources/x64/VisusClient.dll");
 	  var exportedJniMethods = NativeInspector.listExportedJniMethods(visusClientDllx64.getAbsolutePath());
 	  Assertions.assertTrue(exportedJniMethods.length > 0);
+	  Assertions.assertTrue(
+			  Arrays.stream(exportedJniMethods).anyMatch("Java_com_visustt_tools_system_SystemProperties_isWin64"::equals));
   }
 }

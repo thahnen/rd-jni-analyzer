@@ -5,7 +5,7 @@
 *      Author: thahnen
 */
 
-#include <windows.h>
+#include <Windows.h>
 #include <vector>
 #include <string>
 
@@ -36,6 +36,25 @@ DWORD RvaToOffset(DWORD rva, const IMAGE_SECTION_HEADER* sections, WORD numSecti
 }
 
 /// <summary>
+/// This method handles 32 Bit JNI method names that have an adjusted name due to Name Mangling.
+/// In case Name Mangling was noticed on the provided method name (caused by the Windows linker and
+/// the calling conventions, e.g. when using "__stdcall" or "__cdecl"), the method name is adjusted
+/// accordingly and returned to be on par with 64 Bit JNI method names.
+/// </summary>
+/// <param name="methodName">To handle in case of Name Mangling</param>
+string handle32BitJniMethodNames(const char* methodName) {
+	string cleanName(methodName);
+	if (cleanName[0] == '_') {
+		cleanName = cleanName.substr(1);
+	}
+	auto atIndex = cleanName.find('@');
+	if (atIndex != string::npos) {
+		cleanName = cleanName.substr(0, atIndex);
+	}
+	return cleanName;
+}
+
+/// <summary>
 /// This parses the export table of the 32-/64-Bit PE file and iterates over the exported names,
 /// sorting out all the methods not related to JNI.
 /// </summary>
@@ -60,8 +79,8 @@ void parsePEExports(BYTE* data, DWORD exportRva, const IMAGE_SECTION_HEADER* sec
 		}
 
 		auto name = (char*)(data + nameOffset);
-		if (strncmp(name, "Java_", 5) == 0) {
-			exports.emplace_back(name);
+		if (strncmp(name, "Java_", 5) == 0 || strncmp(name, "_Java_", 6) == 0) {
+			exports.emplace_back(handle32BitJniMethodNames(name));
 		}
 	}
 }
@@ -91,44 +110,44 @@ JNIEXPORT jobjectArray JNICALL Java_com_hahnentt_rd_jni_NativeInspector_listExpo
 	fclose(file);
 	env->ReleaseStringUTFChars(nativeFilePath, path);
 
-	auto base = (IMAGE_DOS_HEADER*)buffer.data();
-
 	// iii) Check the PE header and NT signature of the file
-	if (base->e_magic != IMAGE_DOS_SIGNATURE) {
+	auto dosHeader = (IMAGE_DOS_HEADER*)buffer.data();
+	if (dosHeader->e_magic != IMAGE_DOS_SIGNATURE) {
 		throwUnsupportedOperationException(env, "Invalid PE header / magic number (DOS).");
 		return nullptr;
 	}
 
-	auto nt32 = (IMAGE_NT_HEADERS32*)(buffer.data() + base->e_lfanew);
-	if (nt32->Signature != IMAGE_NT_SIGNATURE) {
+	auto ntHeader = (IMAGE_NT_HEADERS*)(buffer.data() + dosHeader->e_lfanew);
+	if (ntHeader->Signature != IMAGE_NT_SIGNATURE) {
 		throwUnsupportedOperationException(env, "Invalid PE header / magic number (NT).");
 		return nullptr;
 	}
 
-	auto nt64 = (IMAGE_NT_HEADERS64*)(buffer.data() + base->e_lfanew);
 	IMAGE_SECTION_HEADER* sections = nullptr;
 	WORD numSections = 0;
 	DWORD exportRva = 0;
 
 	// iv) Sort out unsupported architecture
-	switch (nt32->FileHeader.Machine) {
-	case IMAGE_FILE_MACHINE_I386:
+	WORD machine = ntHeader->FileHeader.Machine;
+	if (machine == IMAGE_FILE_MACHINE_I386) {
+		auto nt32 = (IMAGE_NT_HEADERS32*)(buffer.data() + dosHeader->e_lfanew);
 		sections = IMAGE_FIRST_SECTION(nt32);
 		numSections = nt32->FileHeader.NumberOfSections;
 		exportRva = nt32->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_EXPORT].VirtualAddress;
-		break;
-	case IMAGE_FILE_MACHINE_AMD64:
+	}
+	else if (machine == IMAGE_FILE_MACHINE_AMD64) {
+		auto nt64 = (IMAGE_NT_HEADERS64*)(buffer.data() + dosHeader->e_lfanew);
 		sections = IMAGE_FIRST_SECTION(nt64);
 		numSections = nt64->FileHeader.NumberOfSections;
 		exportRva = nt64->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_EXPORT].VirtualAddress;
-		break;
-	default:
+	}
+	else {
 		throwUnsupportedOperationException(env, "Unsupported architecture: 32-/64-Bit ARM is not supported.");
 		return nullptr;
 	}
 
 	// v) Make sure Relative Virtual Address to export table and information about sections exists
-	if (exportRva == 0 || sections == nullptr) {
+	if (exportRva == 0 || sections == nullptr || numSections == 0) {
 		throwUnsupportedOperationException(env, "Export table (RVA) or section information not found.");
 		return nullptr;
 	}
