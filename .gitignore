@@ -34,3 +34,6 @@ ipch/
 
 !src/test/resources/x86/*.dll
 !src/test/resources/x64/*.dll
+
+# SonarQube Cloud token
+.sonar-project.properties

@@ -24,6 +24,11 @@
 
     <!-- Test code dependency versions -->
     <version.junit-jupiter>5.12.2</version.junit-jupiter>
+
+    <!-- SonarQube properties, currently only for macOS for native C++ code -->
+    <sonar.organization>thahnen</sonar.organization>
+    <sonar.sources>src/main/java,src/main/visual_cpp/include,src/main/visual_cpp/libNativeInspectorOSX</sonar.sources>
+    <sonar.cfamily.compile-commands>src/main/visual_cpp/libNativeInspectorOSX/Release/compile_commands.json</sonar.cfamily.compile-commands>
   </properties>
 
   <dependencies>
